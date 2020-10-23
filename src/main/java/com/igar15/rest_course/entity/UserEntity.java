@@ -1,20 +1,38 @@
-package com.igar15.rest_course.shared.dto;
+package com.igar15.rest_course.entity;
 
+import javax.persistence.*;
 import java.io.Serializable;
 
-public class UserDto implements Serializable {
+@Entity
+@Table(name = "users")
+public class UserEntity implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1343242423432L;
+    @Id
+    @SequenceGenerator(name = "global_seq", sequenceName = "global_seq", allocationSize = 1, initialValue = 100)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "global_seq")
+    @Column(name = "id")
     private long id;
-    private String userId;
-    private String firstName;
-    private String lastName;
-    private String email;
-    private String password;
-    private String encryptedPassword;
-    private String emailVerificationToken;
-    private Boolean emailVerificationStatus = false;
 
+    @Column(name = "user_id", nullable = false)
+    private String userId;
+
+    @Column(name = "first_name", nullable = false, length = 50)
+    private String firstName;
+
+    @Column(name = "last_name", nullable = false, length = 50)
+    private String lastName;
+
+    @Column(name = "email", nullable = false, length = 120, unique = true)
+    private String email;
+
+    @Column(name = "encrypted_password", nullable = false)
+    private String encryptedPassword;
+
+    private String emailVerificationToken;
+
+    @Column(name = "email_verification_status")
+    private Boolean emailVerificationStatus = false;
 
     public long getId() {
         return id;
@@ -54,14 +72,6 @@ public class UserDto implements Serializable {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public String getEncryptedPassword() {
