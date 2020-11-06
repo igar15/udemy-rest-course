@@ -1,5 +1,7 @@
 package com.igar15.rest_course.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import javax.persistence.*;
 
 @Entity
@@ -31,6 +33,7 @@ public class AddressEntity {
     private String type;
 
     @ManyToOne
+    @JsonManagedReference
     @JoinColumn(name = "users_id")
     private UserEntity userDetails;
 

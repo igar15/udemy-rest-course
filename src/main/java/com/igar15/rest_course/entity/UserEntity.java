@@ -1,5 +1,7 @@
 package com.igar15.rest_course.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.List;
@@ -36,6 +38,7 @@ public class UserEntity implements Serializable {
     private Boolean emailVerificationStatus = false;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "userDetails")
+    @JsonBackReference
     private List<AddressEntity> addresses;
 
 

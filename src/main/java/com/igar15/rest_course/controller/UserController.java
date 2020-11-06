@@ -9,6 +9,9 @@ import com.igar15.rest_course.service.AddressService;
 import com.igar15.rest_course.service.UserService;
 import com.igar15.rest_course.shared.dto.AddressDto;
 import com.igar15.rest_course.shared.dto.UserDto;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.BeanUtils;
@@ -37,6 +40,9 @@ public class UserController {
     @Autowired
     private AddressService addressService;
 
+    @ApiOperation(value = "The Get User details web service endpoint",
+                    notes = "${userController.GetUser.ApiOperation.Notes}")
+    @ApiImplicitParams({@ApiImplicitParam(name = "authorization", value = "${userController.authorizationHeader.description}", paramType = "header")}) // this annotation uses to make possible add authorization header in swagger ui
     @GetMapping("/{id}")
     public UserRest getUser(@PathVariable("id") String id) {
         UserDto userDto = userService.getUserByUserId(id);
@@ -45,6 +51,8 @@ public class UserController {
         return returnValue;
     }
 
+    @ApiOperation(value = "The Create User details web service endpoint",
+            notes = "${userController.CreateUser.ApiOperation.Notes}")
     @PostMapping
     public UserRest createUser(@RequestBody UserDetailsRequestModel userDetails) {
 //        UserRest returnValue = new UserRest();
@@ -65,18 +73,23 @@ public class UserController {
         return returnValue;
     }
 
+    @ApiImplicitParams({@ApiImplicitParam(name = "authorization", value = "${userController.authorizationHeader.description}", paramType = "header")}) // this annotation uses to make possible add authorization header in swagger ui
     @PutMapping("/{id}")
     public UserRest updateUser(@PathVariable("id") String id, @RequestBody UserDetailsRequestModel userDetails) {
         UserRest returnValue = new UserRest();
 
         UserDto userDto = new UserDto();
-        BeanUtils.copyProperties(userDetails, userDto);
+//        BeanUtils.copyProperties(userDetails, userDto);
+        userDto = new ModelMapper().map(userDetails, UserDto.class);
+
 
         UserDto updatedUser = userService.updateUser(id, userDto);
-        BeanUtils.copyProperties(updatedUser, returnValue);
+//        BeanUtils.copyProperties(updatedUser, returnValue);
+        returnValue = new ModelMapper().map(updatedUser, UserRest.class);
         return returnValue;
     }
 
+    @ApiImplicitParams({@ApiImplicitParam(name = "authorization", value = "${userController.authorizationHeader.description}", paramType = "header")}) // this annotation uses to make possible add authorization header in swagger ui
     @DeleteMapping("/{id}")
     public OperationStatusModel deleteUser(@PathVariable("id") String id) {
         OperationStatusModel operationStatusModel = new OperationStatusModel();
@@ -88,20 +101,26 @@ public class UserController {
         return operationStatusModel;
     }
 
+    @ApiImplicitParams({@ApiImplicitParam(name = "authorization", value = "${userController.authorizationHeader.description}", paramType = "header")}) // this annotation uses to make possible add authorization header in swagger ui
     @GetMapping
     public List<UserRest> getUsers(@SortDefault("lastName") Pageable pageable) {    // we can use @RequestParam(page & size) instead of Pageable, but what for?
         List<UserRest> returnValue = new ArrayList<>();
         List<UserDto> users = userService.getUsers(pageable);
 
-        users.forEach(userDto -> {
-            UserRest userRest = new UserRest();
-            BeanUtils.copyProperties(userDto, userRest);
-            returnValue.add(userRest);
-        });
+        Type listType = new TypeToken<List<UserRest>>() {
+        }.getType();
+        returnValue = new ModelMapper().map(users, listType);
+
+//        users.forEach(userDto -> {
+//            UserRest userRest = new UserRest();
+//            BeanUtils.copyProperties(userDto, userRest);
+//            returnValue.add(userRest);
+//        });
 
         return returnValue;
     }
 
+    @ApiImplicitParams({@ApiImplicitParam(name = "authorization", value = "${userController.authorizationHeader.description}", paramType = "header")}) // this annotation uses to make possible add authorization header in swagger ui
     @GetMapping(value = "/{id}/addresses", produces = {MediaType.APPLICATION_JSON_VALUE, "application/hal+json"})
     public CollectionModel<AddressRest> getUserAddresses(@PathVariable("id") String id) {
         List<AddressRest> returnValue = new ArrayList<>();
@@ -123,6 +142,7 @@ public class UserController {
         return new CollectionModel<>(returnValue);
     }
 
+    @ApiImplicitParams({@ApiImplicitParam(name = "authorization", value = "${userController.authorizationHeader.description}", paramType = "header")}) // this annotation uses to make possible add authorization header in swagger ui
     @GetMapping(value = "/{id}/addresses/{addressId}", produces = {MediaType.APPLICATION_JSON_VALUE, "application/hal+json"})
     public EntityModel<AddressRest> getUserAddress(@PathVariable("id") String id, @PathVariable("addressId") String addressId) {
         AddressDto addressDto = addressService.getAddress(addressId);
