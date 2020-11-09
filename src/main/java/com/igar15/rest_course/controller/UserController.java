@@ -7,6 +7,7 @@ import com.igar15.rest_course.model.request.UserDetailsRequestModel;
 import com.igar15.rest_course.model.response.*;
 import com.igar15.rest_course.service.AddressService;
 import com.igar15.rest_course.service.UserService;
+import com.igar15.rest_course.shared.Roles;
 import com.igar15.rest_course.shared.dto.AddressDto;
 import com.igar15.rest_course.shared.dto.UserDto;
 import io.swagger.annotations.ApiImplicitParam;
@@ -23,11 +24,15 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/users")
@@ -40,6 +45,8 @@ public class UserController {
     @Autowired
     private AddressService addressService;
 
+
+    @PostAuthorize("hasRole('ADMIN') or returnObject.userId == principal.userId") // we use this @PostAu. here just for example, it is simply to use @PreA.
     @ApiOperation(value = "The Get User details web service endpoint",
                     notes = "${userController.GetUser.ApiOperation.Notes}")
     @ApiImplicitParams({@ApiImplicitParam(name = "authorization", value = "${userController.authorizationHeader.description}", paramType = "header")}) // this annotation uses to make possible add authorization header in swagger ui
@@ -66,6 +73,7 @@ public class UserController {
 
         ModelMapper modelMapper = new ModelMapper();
         UserDto userDto = modelMapper.map(userDetails, UserDto.class);
+        userDto.setRoles(Set.of(Roles.ROLE_USER.name()));
 
         UserDto createdUser = userService.createUser(userDto);
 //        BeanUtils.copyProperties(createdUser, returnValue);
@@ -89,6 +97,9 @@ public class UserController {
         return returnValue;
     }
 
+    //@Secured("ROLE_ADMIN")
+    //@PreAuthorize("hasAuthority('DELETE_AUTHORITY')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or #id == principal.userId")
     @ApiImplicitParams({@ApiImplicitParam(name = "authorization", value = "${userController.authorizationHeader.description}", paramType = "header")}) // this annotation uses to make possible add authorization header in swagger ui
     @DeleteMapping("/{id}")
     public OperationStatusModel deleteUser(@PathVariable("id") String id) {

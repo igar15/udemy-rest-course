@@ -1,11 +1,14 @@
 package com.igar15.rest_course.service.impl;
 
 import com.igar15.rest_course.entity.PasswordResetTokenEntity;
+import com.igar15.rest_course.entity.RoleEntity;
 import com.igar15.rest_course.entity.UserEntity;
 import com.igar15.rest_course.exceptions.UserServiceException;
 import com.igar15.rest_course.model.response.ErrorMessages;
 import com.igar15.rest_course.repository.PasswordResetTokenRepository;
+import com.igar15.rest_course.repository.RoleRepository;
 import com.igar15.rest_course.repository.UserRepository;
+import com.igar15.rest_course.security.UserPrincipal;
 import com.igar15.rest_course.service.UserService;
 import com.igar15.rest_course.shared.Utils;
 import com.igar15.rest_course.shared.dto.UserDto;
@@ -24,6 +27,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 @Service
@@ -46,6 +51,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private PasswordResetTokenRepository passwordResetTokenRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
 
 
     @Override
@@ -70,6 +78,16 @@ public class UserServiceImpl implements UserService {
         userEntity.setEncryptedPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         userEntity.setEmailVerificationToken(utils.generateEmailVerificationToken(userId));
         userEntity.setEmailVerificationStatus(false);
+
+        // Set roles
+        Collection<RoleEntity> roleEntities = new HashSet<>();
+        for (String role : user.getRoles()) {
+            RoleEntity roleEntity = roleRepository.findByName(role);
+            if (roleEntity != null) {
+                roleEntities.add(roleEntity);
+            }
+        }
+        userEntity.setRoles(roleEntities);
 
         UserEntity storedUserDetails = userRepository.save(userEntity);
 
@@ -105,12 +123,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         UserEntity userEntity = userRepository.findByEmail(email);
+
         if (userEntity == null) {
             throw new UsernameNotFoundException(email);
         }
-//        return new User(userEntity.getEmail(), userEntity.getEncryptedPassword(), new ArrayList<>());
-        return new User(userEntity.getEmail(), userEntity.getEncryptedPassword(), userEntity.getEmailVerificationStatus(),
-                true, true, true, new ArrayList<>());
+
+//        return new User(userEntity.getEmail(), userEntity.getEncryptedPassword(), userEntity.getEmailVerificationStatus(),
+//                true, true, true, new ArrayList<>());
+
+        return new UserPrincipal(userEntity);
     }
 
     @Override
